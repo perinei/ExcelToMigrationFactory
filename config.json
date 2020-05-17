@@ -1,0 +1,13 @@
+{
+    "config": [
+        {
+            "Excel_File_Name": "sa.xlsx",
+            "Excel_Tab_Name": "Re-host-Dashboard",
+            "Server_Column_Name": "Server Name",
+            "Wave_Column_Name": "Wave",
+            "Row_With_Field_Names": 2,
+            "First_Tag_Name": "ApplicationName",
+            "Last_Tag_Name": "AppCat"
+        }
+    ]
+}
