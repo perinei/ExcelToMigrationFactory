@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+# This script automate the tagging process reading from excel file and writing to CloudEndure blueprint.
+
 import argparse
 import requests
 import json
