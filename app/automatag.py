@@ -1,5 +1,4 @@
 #!/usr/bin/python
-#
 
 import argparse
 import requests
@@ -19,7 +18,7 @@ import os
 
 import getpass
 
-logging.basicConfig(filename='CE_Update_Blueprints.log', format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG)
+logging.basicConfig(filename='/Users/perineia/Documents/Carrier/cloudendure/logs/CE_Update_Blueprints.log', format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 TITLES = [('projectName', 'targetCloud', 'machineName', 'iamRole', 'privateIPs', 'placementGroup', 'staticIp', 'tags', 'publicIPAction',
@@ -444,8 +443,8 @@ def main(args):
 		args.user = input("email address:")
 	while (args.password is None) or (args.password == ''):
 		args.password = getpass.getpass()
-	while (args.task is None) or (args.user == '') or ((args.task != 'add') and (args.task != 'del')):
-		args.task = input("Enter Task <add> or <del> :")
+	while (args.task is None) or (args.user == '') or ((args.task != 'add') and (args.task != 'del') and (args.task != 'dryrun')):
+		args.task = input("Enter Task <add> or <del> or <dryrun> :")
 	while (args.wave is None) or (args.wave == ''):
 		args.wave = input("Enter wave. Ex. R02W03:")
 	
@@ -597,8 +596,8 @@ if __name__ == '__main__':
     parser.add_argument('-u', '--user', required=False, help='User name')
     parser.add_argument('-p', '--password', required=False, help='Password')
     ##### excelToCE start ######
-    parser.add_argument('-t', '--task', required=False, help='add or del')
-    parser.add_argument('-w', '--wave', required=False, help='format R0xWxx')
+    parser.add_argument('-t', '--task', required=False, help='<add>, <del> or <dryrun>')
+    parser.add_argument('-w', '--wave', required=False, help='example R0xWxx, Pilot or <all> for all server on spreadsheet')
     ###### excelToCE end ########
     parser.add_argument('-o', '--outputfile', required=False, help='Output CSV file for backup before change')
     main(args = parser.parse_args())
