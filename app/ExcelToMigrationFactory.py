@@ -1,6 +1,5 @@
 #!/usr/bin/python
 
-# This script automate the tagging process reading from excel file and writing to CloudEndure blueprint.
 
 import argparse
 import requests
@@ -20,8 +19,8 @@ import os
 
 import getpass
 
-logging.basicConfig(filename='/Users/perineia/Documents/Carrier/cloudendure/logs/CE_Update_Blueprints.log', format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG)
-log = logging.getLogger(__name__)
+# logging.basicConfig(filename='D:\\Users\\perineia\\Documents\\carrier\\logs\\CE_Update_Blueprints.log', format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG)
+# log = logging.getLogger(__name__)
 
 TITLES = [('projectName', 'targetCloud', 'machineName', 'iamRole', 'privateIPs', 'placementGroup', 'staticIp', 'tags', 'publicIPAction',
 			'disks', 'instanceType', 'securityGroupIDs', 'staticIpAction', 'subnetIDs', 'subnetsHostProject', 'privateIPAction', 'runAfterLaunch', 'tenancy')]
@@ -430,65 +429,20 @@ def _process_bp(bp, session, new_blueprints, failed, project, keys):
 		log.error(ex.message+'\n')
 		failed.append(new_bp)
 		pass
-
-
-
-
 ###################################################################################################
 
 
-###################################################################################################
 def main(args):
 	print(chr(27) + "[2J")
-	print("CloudEndure AutomaTAG")
-	while (args.user is None) or (args.user == ''):
-		args.user = input("email address:")
-	while (args.password is None) or (args.password == ''):
-		args.password = getpass.getpass()
-	while (args.task is None) or (args.user == '') or ((args.task != 'add') and (args.task != 'del') and (args.task != 'dryrun')):
-		args.task = input("Enter Task <add> or <del> or <dryrun> :")
+	print("Excel To Migration Factory")
 	while (args.wave is None) or (args.wave == ''):
 		args.wave = input("Enter wave. Ex. R02W03:")
-	
 
-
-# This main function gets all the servers and peoject in an account and create a csv file to be 
+# This main function gets all the servers and project in an account and create a csv file to be
 # used as a template input file to update the blueprints
 # 
 # Usage: main(args)
 
-	session = _login(args)
-	
-	clouds = _get_cloud_ids(session)
-
-	projects_resp = session.get(url=HOST+ENDPOINT.format('projects'))	
-	if projects_resp.status_code != 200:
-		print ('Failed to fetch the project')
-		sys.exit(2)
-	projects = json.loads(projects_resp.content)['items']
-	machines=[]
-	for project in projects:
-		print ('Processing project ' + project['name'])
-		project_id = project['id']
-		targetCloud=''
-		keys =()
-		if project['targetCloudId'] in clouds:
-			keys=clouds[project['targetCloudId']][1]
-			targetCloud=clouds[project['targetCloudId']][0]
-		else:			
-			print ('Could not identify target cloud for Project ' + project['name'] + '. Target cloud id is ' + project['targetCloudId'])
-			continue
-		
-		r = session.get(url=HOST+ENDPOINT.format('projects/{}/machines').format(project_id))
-		if r.status_code != 200:
-			print ('Failed to fetch the machines')
-			continue
-
-		
-		for machine in json.loads(r.text)['items']:
-			machines.append((project['name'], targetCloud, machine['sourceProperties']['name'])+keys)
-	_dump_csv(TITLES+machines,open('myMachinesFromCloudendure.csv', mode='w'))
-	print ('Done!')
 
 	###### ExcelToCE start ########
 
@@ -503,103 +457,29 @@ def main(args):
 			first_tag = param['First_Tag_Name']
 			last_tag = param['Last_Tag_Name']
 
-    #1
-	csv_machines = put_machine_names_from_csvfiles_in_array()
-    #2
+	#1
+	# csv_machines = put_machine_names_from_csvfiles_in_array()
+	#2
 	servers_col = get_server_location(sheet, server_col_string, row_with_field_names)
-    #3
+	#3
 	waves_col = get_wave_location(sheet, wave_col_string, row_with_field_names)
-    #4
+	#4
 	excel_servers = put_server_names_from_excelfile_in_array(sheet, servers_col, waves_col, args.wave, row_with_field_names)
-    #5
+	#5
 	machines = compare_arrays_of_machine_names(csv_machines, excel_servers)
-    #6
+	#6
 	create_csv(machines, sheet, args.task, servers_col, first_tag, last_tag, row_with_field_names)
 
 ###### excelToCE end ########
-	session = _login2(args)
-	
-	log.info('Reading configuration from CSV file...')
-	new_blueprints = _read_blueprints_csv("CE-blueprint.csv")
-	
-	clouds = _get_cloud_ids2(session)
-	
-	log.info('Reading data...')
-	projects_resp = session.get(url=HOST+ENDPOINT.format('projects'))
-	
-	if projects_resp.status_code != 200:
-		log.error('Failed to fetch projects. Aborting!')
-		return -1	
-		
-	projects = json.loads(projects_resp.content)['items']
-	
-	datestringNow = datetime.strftime(datetime.now(), '%m-%d-%Y-%H-%M-%S')
-	failed = []
-	for project in projects:
-		log.info('=' * 100)
-		log.info('Processing blueprint for Project ' + project['name'])
-		project_id = project['id']
-		
-		keys =[]
-		if project['targetCloudId'] in clouds:
-			keys=clouds[project['targetCloudId']]
-		else:			
-			log.warn('Could not identify target cloud for Project ' + project['name'] + '. Target cloud id is ' + project['targetCloudId'])
-			continue
-			
-		machines_resp = session.get(url=HOST+ENDPOINT.format('projects/{}/machines'.format(project_id)))
-		if machines_resp.status_code != 200:
-			log.error('Failed to fetch machines for project ' + project['name'] + '. Skipping this project')
-			continue
-		machines = json.loads(machines_resp.content)['items']
 
-		blueprints_resp = session.get(url=HOST+ENDPOINT.format('projects/{}/blueprints'.format(project_id)))
-		if blueprints_resp.status_code != 200:
-			log.error('Failed to fetch bluprints for project ' + project['name'] + '. Skipping this project')
-			continue
-		blueprints = json.loads(blueprints_resp.content)['items']
-
-		for bp in blueprints:
-			machine_blueprints = None
-			machine_blueprints = [m['sourceProperties']['name'] for m in machines if m['id']==bp['machineId']]
-			if not machine_blueprints:
-				continue
-			bp['machineName'] = machine_blueprints[0]
-
-		if args.outputfile and blueprints:
-			log.info('Writing '+ project['name'] +' blueprints to CSV file...')
-			_write_blueprints_csv(project['name']+'_'+datestringNow+'_'+args.outputfile, blueprints)
-
-		for bp in blueprints:
-			if 'machineName' in bp.keys():
-				_process_bp(bp, session, new_blueprints, failed, project ,keys)
-	
-	if failed:
-		print("failed1")
-		log.info('Not all Blueprints were set. Please fix parameters in FailedBlueprints csv file and re-run')
-		_write_blueprints_csv('FailedBlueprints_'+datestringNow+'.csv', failed)
-	else:
-		log.info('All blueprints were set!')
-		### delete files ###
-		os.remove("CE-blueprint.csv")
-		os.remove("myMachinesFromCloudendure.csv")
-		print("All blueprints were set!")
-	return 0
-
-	
-
-	
-
-
-###################################################################################################
 if __name__ == '__main__':
-	
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-u', '--user', required=False, help='User name')
-    parser.add_argument('-p', '--password', required=False, help='Password')
-    ##### excelToCE start ######
-    parser.add_argument('-t', '--task', required=False, help='<add>, <del> or <dryrun>')
-    parser.add_argument('-w', '--wave', required=False, help='example R0xWxx, Pilot or <all> for all server on spreadsheet')
-    ###### excelToCE end ########
-    parser.add_argument('-o', '--outputfile', required=False, help='Output CSV file for backup before change')
-    main(args = parser.parse_args())
+
+	parser = argparse.ArgumentParser()
+	# parser.add_argument('-u', '--user', required=False, help='User name')
+	# parser.add_argument('-p', '--password', required=False, help='Password')
+	# ##### excelToCE start ######
+	# parser.add_argument('-t', '--task', required=False, help='<add>, <del> or <dryrun>')
+	parser.add_argument('-w', '--wave', required=False, help='example R0xWxx, Pilot or <all> for all server on spreadsheet')
+	# ###### excelToCE end ########
+	parser.add_argument('-o', '--outputfile', required=False, help='Output CSV file for backup before change')
+	main(args = parser.parse_args())
