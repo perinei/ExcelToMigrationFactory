@@ -19,103 +19,6 @@ import os
 
 import getpass
 
-# logging.basicConfig(filename='D:\\Users\\perineia\\Documents\\carrier\\logs\\CE_Update_Blueprints.log', format='%(asctime)s %(levelname)s:%(message)s', level=logging.DEBUG)
-# log = logging.getLogger(__name__)
-
-TITLES = [('projectName', 'targetCloud', 'machineName', 'iamRole', 'privateIPs', 'placementGroup', 'staticIp', 'tags', 'publicIPAction',
-			'disks', 'instanceType', 'securityGroupIDs', 'staticIpAction', 'subnetIDs', 'subnetsHostProject', 'privateIPAction', 'runAfterLaunch', 'tenancy')]
-
-
-AZURE_KEYS = ('N/A','','N/A','N/A','N/A','N/A','N/A','','','N/A','','N/A','','N/A','N/A')
-GCP_KEYS = ('N/A','','N/A','N/A','N/A','N/A','','','N/A','N/A','','','','N/A','N/A') #machine name
-AWS_KEYS = ('','','','','','','','','','','','N/A','','','')
-
-# List of keys avilable for each target cloud
-AZURE_KEYS2 = ['instanceType','subnetIDs','securityGroupIDs','privateIPAction', 'privateIPs']
-GCP_KEYS2 = ['instanceType','machineName','subnetIDs','privateIPAction', 'privateIPs','disks', 'subnetsHostProject']
-AWS_KEYS2 = ['instanceType','subnetIDs','privateIPAction', 'privateIPs','disks','iamRole', 'placementGroup', 'staticIp', 'tags', 
-			'publicIPAction', 'securityGroupIDs', 'staticIpAction', 'runAfterLaunch', 'tenancy']
-
-HOST = 'https://console.cloudendure.com'
-ENDPOINT = '/api/latest/{}'
-
-
-###################################################################################################
-def _dump_csv(rows, output):
-
-# This function write the output csv file
-# 
-# Usage: _dump_csv(rows, output):
-# 	'rows' 		the data to be written to the fils
-#	'output'  	the output file
-# 
-# Returns: 	None
-	print ('Creating csv template...')
-	for row in rows:
-		for value in row:
-			try:
-				output.write('{},'.format(value))
-			except:
-				print (value)
-				pass
-		output.write('\n')
-		
-		
-###################################################################################################
-def _get_cloud_ids(session):
-
-# This function login into CloudEdnure API
-# 
-# Usage: _get_cloud_ids(session) 	
-# 
-# Returns: 	a dictionary with CloudId and keys.
-
-	print ('Getting cloud ids...')
-	clouds_resp = session.get(url=HOST+ENDPOINT.format('clouds'))	
-	clouds = json.loads(clouds_resp.content)['items']
-	
-	cloud_ids = {}
-	for cloud in clouds:
-		if cloud['name'] == 'GCP':
-			cloud_ids[cloud['id']] = ('GCP', GCP_KEYS)
-		elif cloud['name'] == 'AWS':
-			cloud_ids[cloud['id']] = ('AWS', AWS_KEYS)
-		elif cloud['name'] == 'AZURE_ARM':
-			cloud_ids[cloud['id']] = ('AZURE_ARM', AZURE_KEYS)
-	
-	return cloud_ids
-	
-###################################################################################################
-def _login(args):
-
-# This function login into CloudEdnure API
-# 
-# Usage: _login(args) 	
-# 
-# Returns: 	None
-	global ENDPOINT
-	
-	session = requests.Session()
-	session.headers.update({'Content-type': 'application/json', 'Accept': 'text/plain'})
-	print ('Logging in...')
-	resp = session.post(url=HOST+ENDPOINT.format('login'), 
-						data=json.dumps({'username': args.user, 'password': args.password}))
-	if resp.status_code != 200 and resp.status_code != 307:
-		print ('Could not login!')
-		sys.exit(2)
-		
-	# check if need to use a different API entry point
-	if resp.history:
-		print ('URL Redirected...')
-		ENDPOINT = '/' + '/'.join(resp.url.split('/')[3:-1]) + '/{}'
-		resp = session.post(url=HOST+ENDPOINT.format('login'),
-						data=json.dumps({'username': args.user, 'password': args.password}))
-
-	if session.cookies.get('XSRF-TOKEN'):
-		session.headers['X-XSRF-TOKEN'] = session.cookies.get('XSRF-TOKEN')	
-		
-	return session
-
 ##### ExcelToCE ######
 #1
 def put_machine_names_from_csvfiles_in_array():
@@ -201,30 +104,28 @@ def compare_arrays_of_machine_names(csv, excel):
 
 
 #6
-def create_csv(machines, sheet, task, servers_col, first_tag, last_tag, row_with_field_names):
-    if task == "add":
-        
-        # identify where is the first col TAGS
-        first_tag_col = -1
-        for col in range(sheet.ncols):
-            if sheet.cell_value(row_with_field_names, col) == first_tag:
-                first_tag_col = col
-                print(f'First Tag ({first_tag}) is in column {first_tag_col}')
-                break
-        if first_tag_col == -1:
-            print("First tag not found")  
-            sys.exit()  
+def create_csv(machines, sheet, servers_col, first_tag, last_tag, row_with_field_names):
+    # identify where is the first col TAGS
+    first_tag_col = -1
+    for col in range(sheet.ncols):
+        if sheet.cell_value(row_with_field_names, col) == first_tag:
+            first_tag_col = col
+            print(f'First Tag ({first_tag}) is in column {first_tag_col}')
+            break
+    if first_tag_col == -1:
+        print("First tag not found")
+        sys.exit()
 
-        # identify where is the last col TAGS
-        last_tag_col = -1
-        for col in range(sheet.ncols):
-            if sheet.cell_value(row_with_field_names, col) == last_tag:
-                last_tag_col = col
-                print(f'Last Tag ({last_tag}) is in column {last_tag_col}')
-                break
-        if last_tag_col == -1:
-            print("Last tag not found")   
-            sys.exit()  
+    # identify where is the last col TAGS
+    last_tag_col = -1
+    for col in range(sheet.ncols):
+        if sheet.cell_value(row_with_field_names, col) == last_tag:
+            last_tag_col = col
+            print(f'Last Tag ({last_tag}) is in column {last_tag_col}')
+            break
+    if last_tag_col == -1:
+        print("Last tag not found")
+        sys.exit()
 
     export_csv = "CE-blueprint.csv"
     file = open(export_csv, 'w+')
@@ -233,17 +134,9 @@ def create_csv(machines, sheet, task, servers_col, first_tag, last_tag, row_with
     line_count = 0
     # print(machines)
     for machine in machines:
-        with open('myMachinesFromCloudendure.csv') as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=',')
-            for row in csv_reader:
-                # print(f'\t{row[2]}')
-                if machine == row[2]:
-                    if task == 'add':
-                        file.write(f'"{row[0]}","{row[1]}","{row[2]}","","[]","","","","{format_tags(sheet, machine, first_tag_col, last_tag_col, servers_col)}","","","","","","",,,""\n')
-                    if task == 'del':
-                        file.write(f'"{row[0]}","{row[1]}","{row[2]}","","[]","","","","[]","","","","","","",,,""\n')
-                    line_count += 1   
-                    break 
+        file.write(f'"111","222","{machine}","","[]","","","","{format_tags(sheet, machine, first_tag_col, last_tag_col, servers_col)}","","","","","","",,,""\n')
+
+
 
 
 # 7
@@ -272,22 +165,8 @@ def format_tags(sheet, machine, first_tag_col, last_tag_col, servers_col):
     return string_tag 
 #### excelToCE end ####
 
-def _read_blueprints_csv(input_file):
 
-# This function read the new blueprints config CSV file
-# 
-# Usage: _read_blueprints_csv(input_file)
-# 	'input_file' user input for the CSV file containing new blueprint settings to apply
-# 	
-# 
-# Returns: 	an array of blueprints read from the CSV file
 
-	result = []
-	with open(input_file, mode='r') as infile:
-		reader = csv.DictReader(infile)
-		for row in reader:
-			result.append(row)
-	return result
 
 ###################################################################################################
 def _write_blueprints_csv(output_file, blueprints):
@@ -314,121 +193,6 @@ def _write_blueprints_csv(output_file, blueprints):
 		for bp in blueprints:
 			writer.writerow(bp)
 			
-###################################################################################################
-def _login2(args):
-
-# This function login into CloudEdnure API
-# 
-# Usage: _login(args) 	
-# 
-# Returns: 	None
-	global ENDPOINT
-	
-	session = requests.Session()
-	session.headers.update({'Content-type': 'application/json', 'Accept': 'text/plain'})
-	
-	log.info('Logging in...')
-	resp = session.post(url=HOST+ENDPOINT.format('login'), 
-						data=json.dumps({'username': args.user, 'password': args.password}))
-	if resp.status_code != 200 and resp.status_code != 307:
-		log.error('Could not login!')
-		print('Could not login!')
-		sys.exit(2)
-		
-	# check if need to use a different API entry point
-	if resp.history:
-		log.info('URL Redirected...')
-		ENDPOINT = '/' + '/'.join(resp.url.split('/')[3:-1]) + '/{}'
-		resp = session.post(url=HOST+ENDPOINT.format('login'),
-						data=json.dumps({'username': args.user, 'password': args.password}))
-
-	if session.cookies.get('XSRF-TOKEN'):
-		session.headers['X-XSRF-TOKEN'] = session.cookies.get('XSRF-TOKEN')	
-		
-	return session
-
-###################################################################################################
-def _get_cloud_ids2(session):
-
-# This function login into CloudEdnure API
-# 
-# Usage: _get_cloud_ids(session) 	
-# 
-# Returns: 	a dictionary with CloudId and keys.
-
-	log.info('Getting cloud ids...')
-	clouds_resp = session.get(url=HOST+ENDPOINT.format('clouds'))	
-	clouds = json.loads(clouds_resp.content)['items']
-	
-	cloud_ids = {}
-	for cloud in clouds:
-		if cloud['name'] == 'GCP':
-			cloud_ids[cloud['id']] = GCP_KEYS2
-		elif cloud['name'] == 'AWS':
-			cloud_ids[cloud['id']] = AWS_KEYS2
-		elif cloud['name'] == 'AZURE_ARM':
-			cloud_ids[cloud['id']] = AZURE_KEYS2
-	
-	return cloud_ids
-	
-###################################################################################################	
-def _process_bp(bp, session, new_blueprints, failed, project, keys):
-
-# This function process the new bluepint and patch the changes
-# 
-# Usage: _process_bp(bp, session, new_blueprints) 	
-# 
-# Returns: 	None.
-	project_id = project['id']
-	new_bp = True
-	try:
-		log.info('Processing blueprint for Machine ' + bp['machineName'])
-
-		new_bps = [x for x in new_blueprints if x['machineName'] == bp['machineName'] and project['name'] == x['projectName']]
-		if len(new_bps) == 0:
-			return
-		new_bp = new_bps[0]
-
-		# Sync
-		changes_made = False
-		for k in new_bp.keys():
-			if (k in ['id', 'machineId', 'project','region']):
-				continue
-				
-			if k not in keys:
-				continue
-
-			new_value = new_bp[k]
-			if new_value.startswith('[') or new_value.startswith('{') or new_value == 'True' or new_value == 'False':
-				new_value = eval(new_bp[k]) # NOTE: FOR SECURITY REASONS, DO *NOT* USE 'EVAL' IN PRODUCTION!!
-
-			if new_value != '' and bp[k] != new_value:
-				log.info("-- Key {}: Changed '{}' --> '{}'".format(k, bp[k], new_value))
-				if new_value == '\"\"':
-					new_value = ''
-				bp[k] = new_value
-				changes_made = True
-
-		if changes_made:
-			log.info('Updating blueprint for ' + bp['machineName'])
-			bp.pop('machineName', None) # TODO: Need to add support to change Machine name in GCP
-			resp = session.patch(url=HOST+ENDPOINT.format('projects/{}/blueprints/{}'.format(project_id, bp['id'])),
-								data=json.dumps(bp))
-			if resp.status_code != 200:
-				log.error('Error setting blueprint for machine due to invalid parameters')
-				log.error(resp.status_code)
-				log.error(resp.reason)
-				log.error(resp.content)
-				failed.append(new_bp)
-		else:
-			log.info('No change was made\n')
-	
-	except Exception as ex:
-		print("failed")
-		log.error('Unexpected error occured')
-		log.error(ex.message+'\n')
-		failed.append(new_bp)
-		pass
 ###################################################################################################
 
 
@@ -466,9 +230,9 @@ def main(args):
 	#4
 	excel_servers = put_server_names_from_excelfile_in_array(sheet, servers_col, waves_col, args.wave, row_with_field_names)
 	#5
-	machines = compare_arrays_of_machine_names(csv_machines, excel_servers)
+	# machines = compare_arrays_of_machine_names(csv_machines, excel_servers)
 	#6
-	create_csv(machines, sheet, args.task, servers_col, first_tag, last_tag, row_with_field_names)
+	create_csv(excel_servers, sheet, servers_col, first_tag, last_tag, row_with_field_names)
 
 ###### excelToCE end ########
 
