@@ -1,25 +1,11 @@
 #!/usr/bin/python
-
-
-import argparse
-import requests
 import json
-import sys
-# ExcelToCE start #
 import xlrd
 import csv
 import argparse
 import sys
-# ExcelToCe end #
-from datetime import datetime
-import logging
 
-# to delete files after done"
-import os
 
-import getpass
-
-##### ExcelToCE ######
 #1
 def put_machine_names_from_csvfiles_in_array():
     print("")
@@ -41,35 +27,20 @@ def put_machine_names_from_csvfiles_in_array():
         return machine_names_in_csv
 
 
-#2
-def get_server_location(sheet, server_col_string, row_with_field_names):
-    col_num_machine = -1
-    # print(sheet.ncols)
-    for col in range(sheet.ncols):
-        if sheet.cell_value(row_with_field_names, col) == server_col_string:
-            col_num_machine = col
-            # print("Server name in column ", col_num_machine)
-            break
-    if col_num_machine == -1:
-        print("Server name not found.")
-        sys.exit()  
-    print("----------")
-    return col_num_machine
-
 #3
-def get_wave_location(sheet, wave_col_string, row_with_field_names):
+def get_field_location(sheet, col_string, row_with_field_names):
     col_num_wave = -1
     # print(sheet.ncols)
     for col in range(sheet.ncols):
-        if sheet.cell_value(row_with_field_names, col) == wave_col_string:
-            col_num_wave = col
-            # print("Wave name in column ", col_num_wave)
+        if sheet.cell_value(row_with_field_names, col) == col_string:
+            col_num = col
+            print(f'{col_string} name found in column {col_num}')
             break
-    if col_num_wave == -1:
-        print("Wave name not found.")
+    if col_num == -1:
+        print(f'{col_string} name not found.')
     
     print("----------")
-    return col_num_wave
+    return col_num
 
 
 #4
@@ -104,39 +75,25 @@ def compare_arrays_of_machine_names(csv, excel):
 
 
 #6
-def create_csv(machines, sheet, servers_col, first_tag, last_tag, row_with_field_names):
-    # identify where is the first col TAGS
-    first_tag_col = -1
-    for col in range(sheet.ncols):
-        if sheet.cell_value(row_with_field_names, col) == first_tag:
-            first_tag_col = col
-            print(f'First Tag ({first_tag}) is in column {first_tag_col}')
-            break
-    if first_tag_col == -1:
-        print("First tag not found")
-        sys.exit()
-
-    # identify where is the last col TAGS
-    last_tag_col = -1
-    for col in range(sheet.ncols):
-        if sheet.cell_value(row_with_field_names, col) == last_tag:
-            last_tag_col = col
-            print(f'Last Tag ({last_tag}) is in column {last_tag_col}')
-            break
-    if last_tag_col == -1:
-        print("Last tag not found")
-        sys.exit()
+def create_csv(machines, sheet, app_col, servers_col, first_tag_col, last_tag_col, row_with_field_names):
 
     export_csv = "CE-blueprint.csv"
     file = open(export_csv, 'w+')
     # first row
-    file.write('"projectName","targetCloud","machineName","iamRole","privateIPs","privateIPAction","placementGroup","staticIp","tags","publicIPAction","disks","instanceType","securityGroupIDs","staticIpAction","subnetIDs","subnetsHostProject","runAfterLaunch","tenancy"\n')
+    file.write('wave_id,app_name,cloudendure_projectname,aws_accountid,server_name,server_os,server_os_version,server_fqdn,server_tier,server_environment,subnet_IDs,privateIPs,securitygroup_IDs,subnet_IDs_test,securitygroup_IDs_test,iamRole,instanceType,tenancy\n')
     line_count = 0
     # print(machines)
     for machine in machines:
-        file.write(f'"111","222","{machine}","","[]","","","","{format_tags(sheet, machine, first_tag_col, last_tag_col, servers_col)}","","","","","","",,,""\n')
+        file.write(f'111,{get_field_value(sheet, machine, app_col, servers_col)},333,444,{machine},"","","","{format_tags(sheet, machine, first_tag_col, last_tag_col, servers_col)}","","","","","","",,,""\n')
 
-
+#6.5
+def get_field_value(sheet, machine, field_col, server_col):
+    for row in range(sheet.nrows):
+        if sheet.cell_value(row, server_col) == machine:
+            row_machine = row
+            break
+    value = str(sheet.cell_value(row_machine, field_col))
+    return value
 
 
 # 7
@@ -147,7 +104,7 @@ def format_tags(sheet, machine, first_tag_col, last_tag_col, servers_col):
         if sheet.cell_value(row, servers_col) == machine:
             row_machine = row
             # print("col_machine: " + str(col_machine))
-            break    
+            break
         
     string_tag = "["
     # add key value to string_tag
@@ -169,31 +126,7 @@ def format_tags(sheet, machine, first_tag_col, last_tag_col, servers_col):
 
 
 ###################################################################################################
-def _write_blueprints_csv(output_file, blueprints):
 
-# This function write the output csv file
-# 
-# Usage: _write_blueprints_csv(output_file, blueprints)
-# 	'output_file' user output for the CSV filename to create with the current blueprint settings 
-#				 as backup before changing
-#	'bluprints'  existing blueprints data read before applying the new changes
-# 	
-# 
-# Returns: 	None
-
-	with open(output_file, mode='wb') as outfile:
-		field_names = blueprints[0].keys()
-		# Move machineName to be first
-		field_names.remove('machineName')
-		field_names.insert(0, 'machineName')
-		if 'dedicatedHostIdentifier' not in field_names:
-			field_names.append('dedicatedHostIdentifier')
-		writer = csv.DictWriter(outfile, fieldnames = field_names)
-		writer.writeheader()
-		for bp in blueprints:
-			writer.writerow(bp)
-			
-###################################################################################################
 
 
 def main(args):
@@ -215,24 +148,28 @@ def main(args):
 		for param in data['config']:
 			wb_machine_names = xlrd.open_workbook(param['Excel_File_Name'])
 			sheet = wb_machine_names.sheet_by_name(param['Excel_Tab_Name'])
+			row_with_field_names = param['Row_With_Field_Names'] - 1
 			server_col_string = param['Server_Column_Name']
 			wave_col_string = param['Wave_Column_Name']
-			row_with_field_names = param['Row_With_Field_Names'] - 1
-			first_tag = param['First_Tag_Name']
-			last_tag = param['Last_Tag_Name']
+			app_name_string = param['Application_Column_Name']
+			first_tag_string = param['First_Tag_Name']
+			last_tag_string = param['Last_Tag_Name']
 
 	#1
 	# csv_machines = put_machine_names_from_csvfiles_in_array()
-	#2
-	servers_col = get_server_location(sheet, server_col_string, row_with_field_names)
+	# servers_col = get_server_location(sheet, server_col_string, row_with_field_names)
 	#3
-	waves_col = get_wave_location(sheet, wave_col_string, row_with_field_names)
+	servers_col = get_field_location(sheet, server_col_string, row_with_field_names)
+	waves_col = get_field_location(sheet, wave_col_string, row_with_field_names)
+	first_tag_col = get_field_location(sheet, first_tag_string, row_with_field_names)
+	last_tag_col = get_field_location(sheet, last_tag_string, row_with_field_names)
+	app_col = get_field_location(sheet, app_name_string, row_with_field_names)
 	#4
 	excel_servers = put_server_names_from_excelfile_in_array(sheet, servers_col, waves_col, args.wave, row_with_field_names)
 	#5
 	# machines = compare_arrays_of_machine_names(csv_machines, excel_servers)
 	#6
-	create_csv(excel_servers, sheet, servers_col, first_tag, last_tag, row_with_field_names)
+	create_csv(excel_servers, sheet, app_col, servers_col, first_tag_col, last_tag_col, row_with_field_names)
 
 ###### excelToCE end ########
 
