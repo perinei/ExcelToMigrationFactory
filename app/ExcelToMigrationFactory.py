@@ -29,7 +29,7 @@ def put_machine_names_from_csvfiles_in_array():
 
 #3
 def get_field_location(sheet, col_string, row_with_field_names):
-    col_num_wave = -1
+    col_num = -1
     # print(sheet.ncols)
     for col in range(sheet.ncols):
         if sheet.cell_value(row_with_field_names, col) == col_string:
@@ -75,7 +75,8 @@ def compare_arrays_of_machine_names(csv, excel):
 
 
 #6
-def create_csv(machines, sheet, app_col, servers_col, first_tag_col, last_tag_col, row_with_field_names):
+# def create_csv(machines, sheet, app_col, servers_col, first_tag_col, last_tag_col, row_with_field_names):
+def create_csv(excel_servers, sheet, wave_id_col, tenancy_col, instanceType_col, iamRole_col, securitygroup_IDs_test_col, subnet_IDs_test_col, securitygroup_IDs_col, privateIPs_col, subnet_IDs_col, server_environment_col, server_tier_col, app_col, cloudendure_projectname_col, aws_accountid_col, servers_col, server_os_col, server_os_version_col, server_fqdn_col, first_tag_col, last_tag_col, row_with_field_names):
 
     export_csv = "CE-blueprint.csv"
     file = open(export_csv, 'w+')
@@ -83,8 +84,9 @@ def create_csv(machines, sheet, app_col, servers_col, first_tag_col, last_tag_co
     file.write('wave_id,app_name,cloudendure_projectname,aws_accountid,server_name,server_os,server_os_version,server_fqdn,server_tier,server_environment,subnet_IDs,privateIPs,securitygroup_IDs,subnet_IDs_test,securitygroup_IDs_test,iamRole,instanceType,tenancy\n')
     line_count = 0
     # print(machines)
-    for machine in machines:
-        file.write(f'111,{get_field_value(sheet, machine, app_col, servers_col)},333,444,{machine},"","","","{format_tags(sheet, machine, first_tag_col, last_tag_col, servers_col)}","","","","","","",,,""\n')
+    for machine in excel_servers:
+        # file.write(f'{get_field_value(sheet, machine, wave_id_col, servers_col)},{get_field_value(sheet, machine, app_col, servers_col)},{get_field_value(sheet, machine, cloudendure_projectname_col, servers_col)},{get_field_value(sheet, machine, aws_accountid_col, servers_col)},{machine},{get_field_value(sheet, machine, server_os_col, servers_col)},{get_field_value(sheet, machine, server_os_version_col, servers_col)},{get_field_value(sheet, machine, server_fqdn_col, servers_col)},{get_field_value(sheet, machine, server_tier_col, servers_col)},{get_field_value(sheet, machine, server_environment_col, servers_col)},{get_field_value(sheet, machine,subnet_IDs_test_col , servers_col)},{get_field_value(sheet, machine, privateIPs_col , servers_col)},{get_field_value(sheet, machine, securitygroup_IDs_col , servers_col)},{get_field_value(sheet, machine, subnet_IDs_test_col , servers_col)},{get_field_value(sheet, machine, securitygroup_IDs_test_col , servers_col)},{get_field_value(sheet, machine, iamRole_col , servers_col)},{get_field_value(sheet, machine, tenancy_col , servers_col)},{format_tags(sheet, machine, first_tag_col, last_tag_col, servers_col)}\n')
+        file.write(f'{get_field_value(sheet, machine, wave_id_col, servers_col)},{get_field_value(sheet, machine, app_col, servers_col)},{get_field_value(sheet, machine, cloudendure_projectname_col, servers_col)},{get_field_value(sheet, machine, aws_accountid_col, servers_col)},{machine},{get_field_value(sheet, machine, server_os_col, servers_col)},{get_field_value(sheet, machine, server_os_version_col, servers_col)},{get_field_value(sheet, machine, server_fqdn_col, servers_col)},{get_field_value(sheet, machine, server_tier_col, servers_col)},{get_field_value(sheet, machine, server_environment_col, servers_col)},{get_field_value(sheet, machine,subnet_IDs_test_col , servers_col)},{get_field_value(sheet, machine, privateIPs_col , servers_col)},{get_field_value(sheet, machine, securitygroup_IDs_col , servers_col)},{get_field_value(sheet, machine, subnet_IDs_test_col , servers_col)},{get_field_value(sheet, machine, securitygroup_IDs_test_col , servers_col)},{get_field_value(sheet, machine, iamRole_col , servers_col)},{get_field_value(sheet, machine, tenancy_col , servers_col)}\n')
 
 #6.5
 def get_field_value(sheet, machine, field_col, server_col):
@@ -92,7 +94,13 @@ def get_field_value(sheet, machine, field_col, server_col):
         if sheet.cell_value(row, server_col) == machine:
             row_machine = row
             break
-    value = str(sheet.cell_value(row_machine, field_col))
+    value = (sheet.cell_value(row_machine, field_col))
+    # print(type(value))
+    if type(value) == float:
+        # print ('I am float')
+        value = str(int(value))
+    else:
+        value = str(value)
     return value
 
 
@@ -151,25 +159,54 @@ def main(args):
 			row_with_field_names = param['Row_With_Field_Names'] - 1
 			server_col_string = param['Server_Column_Name']
 			wave_col_string = param['Wave_Column_Name']
+			wave_id_col_string = param['wave_id_Column_Name']
 			app_name_string = param['Application_Column_Name']
+			cloudendure_projectname_string = param['cloudendure_projectname_Column_Name']
+			aws_accountid_string = param['aws_accountid_Column_Name']
+			server_os_string = param['server_os_Column_Name']
+			server_os_version_string = param['server_os_version_Column_Name']
+			server_fqdn_string = param['server_fqdn_Column_Name']
+			server_tier_string = param['server_tier_Column_Name']
+			server_environment_string = param['server_environment_Column_Name']
+			subnet_IDs_string = param['subnet_IDs_Column_Name']
+			privateIPs_string = param['privateIPs_Column_Name']
+			securitygroup_IDs_string = param['securitygroup_IDs_Column_Name']
+			subnet_IDs_test_string = param['subnet_IDs_test_Column_Name']
+			securitygroup_IDs_test_string = param['securitygroup_IDs_test_Column_Name']
+			iamRole_string = param['iamRole_Column_Name']
+			instanceType_string = param['instanceType_Column_Name']
+			tenancy_string = param['tenancy_Column_Name']
 			first_tag_string = param['First_Tag_Name']
 			last_tag_string = param['Last_Tag_Name']
 
-	#1
-	# csv_machines = put_machine_names_from_csvfiles_in_array()
-	# servers_col = get_server_location(sheet, server_col_string, row_with_field_names)
 	#3
 	servers_col = get_field_location(sheet, server_col_string, row_with_field_names)
 	waves_col = get_field_location(sheet, wave_col_string, row_with_field_names)
+	wave_id_col = get_field_location(sheet, wave_id_col_string, row_with_field_names)
 	first_tag_col = get_field_location(sheet, first_tag_string, row_with_field_names)
 	last_tag_col = get_field_location(sheet, last_tag_string, row_with_field_names)
+	cloudendure_projectname_col = get_field_location(sheet, cloudendure_projectname_string, row_with_field_names)
+	aws_accountid_col = get_field_location(sheet, aws_accountid_string, row_with_field_names)
+	server_os_col = get_field_location(sheet, server_os_string, row_with_field_names)
+	server_os_version_col = get_field_location(sheet, server_os_version_string, row_with_field_names)
+	server_fqdn_col = get_field_location(sheet, server_fqdn_string, row_with_field_names)
+	server_tier_col = get_field_location(sheet, server_tier_string, row_with_field_names)
+	server_environment_col = get_field_location(sheet, server_environment_string, row_with_field_names)
+	subnet_IDs_col = get_field_location(sheet, subnet_IDs_string, row_with_field_names)
+	privateIPs_col = get_field_location(sheet, privateIPs_string, row_with_field_names)
+	securitygroup_IDs_col = get_field_location(sheet, securitygroup_IDs_string, row_with_field_names)
+	subnet_IDs_test_col = get_field_location(sheet, subnet_IDs_test_string, row_with_field_names)
+	securitygroup_IDs_test_col = get_field_location(sheet, securitygroup_IDs_test_string, row_with_field_names)
+	iamRole_col = get_field_location(sheet, iamRole_string, row_with_field_names)
+	instanceType_col = get_field_location(sheet, instanceType_string, row_with_field_names)
+	tenancy_col = get_field_location(sheet, tenancy_string, row_with_field_names)
 	app_col = get_field_location(sheet, app_name_string, row_with_field_names)
 	#4
 	excel_servers = put_server_names_from_excelfile_in_array(sheet, servers_col, waves_col, args.wave, row_with_field_names)
 	#5
 	# machines = compare_arrays_of_machine_names(csv_machines, excel_servers)
 	#6
-	create_csv(excel_servers, sheet, app_col, servers_col, first_tag_col, last_tag_col, row_with_field_names)
+	create_csv(excel_servers, sheet, wave_id_col ,tenancy_col, instanceType_col, iamRole_col, securitygroup_IDs_test_col, subnet_IDs_test_col, securitygroup_IDs_col, privateIPs_col, subnet_IDs_col, server_environment_col, server_tier_col, app_col, cloudendure_projectname_col, aws_accountid_col, servers_col, server_os_col, server_os_version_col, server_fqdn_col, first_tag_col, last_tag_col, row_with_field_names)
 
 ###### excelToCE end ########
 
