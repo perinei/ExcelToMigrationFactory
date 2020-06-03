@@ -78,7 +78,7 @@ def compare_arrays_of_machine_names(csv, excel):
 # def create_csv(machines, sheet, app_col, servers_col, first_tag_col, last_tag_col, row_with_field_names):
 def create_csv(argswave, excel_servers, sheet, wave_id_col, tenancy_col, instanceType_col, iamRole_col, securitygroup_IDs_test_col, subnet_IDs_test_col, securitygroup_IDs_col, privateIPs_col, subnet_IDs_col, server_environment_col, server_tier_col, app_col, cloudendure_projectname_col, aws_accountid_col, servers_col, server_os_col, server_os_version_col, server_fqdn_col, first_tag_col, last_tag_col, row_with_field_names):
 
-    export_csv = "MigrationFactoryFeed - " + argswave + ".csv"
+    export_csv = "MigrationFactoryFeed_" + argswave + ".csv"
     file = open(export_csv, 'w+')
     # first row
     file.write('wave_id,app_name,cloudendure_projectname,aws_accountid,server_name,server_os,server_os_version,server_fqdn,server_tier,server_environment,subnet_IDs,privateIPs,securitygroup_IDs,subnet_IDs_test,securitygroup_IDs_test,iamRole,instanceType,tenancy\n')
