@@ -5,6 +5,10 @@ import csv
 import argparse
 import sys
 
+import intakeform
+import importtags
+
+
 
 #1
 def put_machine_names_from_csvfiles_in_array():
@@ -74,19 +78,39 @@ def compare_arrays_of_machine_names(csv, excel):
     return update_machines
 
 
-#6
+#6.1
 # def create_csv(machines, sheet, app_col, servers_col, first_tag_col, last_tag_col, row_with_field_names):
-def create_csv(argswave, excel_servers, sheet, wave_id_col, tenancy_col, instanceType_col, iamRole_col, securitygroup_IDs_test_col, subnet_IDs_test_col, securitygroup_IDs_col, privateIPs_col, subnet_IDs_col, server_environment_col, server_tier_col, app_col, cloudendure_projectname_col, aws_accountid_col, servers_col, server_os_col, server_os_version_col, server_fqdn_col, first_tag_col, last_tag_col, row_with_field_names):
+def create_MigrationFactory_form_CSV(argswave, excel_servers, sheet, wave_id_col, tenancy_col, instanceType_col, iamRole_col, securitygroup_IDs_test_col, subnet_IDs_test_col, securitygroup_IDs_col, privateIPs_col, subnet_IDs_col, server_environment_col, server_tier_col, app_col, cloudendure_projectname_col, aws_accountid_col, servers_col, server_os_col, server_os_version_col, server_fqdn_col, first_tag_col, last_tag_col, row_with_field_names):
 
-    export_csv = "MigrationFactoryFeed_" + argswave + ".csv"
+    export_csv = "MigrationFactoryForm_" + argswave + ".csv"
     file = open(export_csv, 'w+')
     # first row
     file.write('wave_id,app_name,cloudendure_projectname,aws_accountid,server_name,server_os,server_os_version,server_fqdn,server_tier,server_environment,subnet_IDs,privateIPs,securitygroup_IDs,subnet_IDs_test,securitygroup_IDs_test,iamRole,instanceType,tenancy\n')
     line_count = 0
     # print(machines)
     for machine in excel_servers:
-        # file.write(f'{get_field_value(sheet, machine, wave_id_col, servers_col)},{get_field_value(sheet, machine, app_col, servers_col)},{get_field_value(sheet, machine, cloudendure_projectname_col, servers_col)},{get_field_value(sheet, machine, aws_accountid_col, servers_col)},{machine},{get_field_value(sheet, machine, server_os_col, servers_col)},{get_field_value(sheet, machine, server_os_version_col, servers_col)},{get_field_value(sheet, machine, server_fqdn_col, servers_col)},{get_field_value(sheet, machine, server_tier_col, servers_col)},{get_field_value(sheet, machine, server_environment_col, servers_col)},{get_field_value(sheet, machine,subnet_IDs_test_col , servers_col)},{get_field_value(sheet, machine, privateIPs_col , servers_col)},{get_field_value(sheet, machine, securitygroup_IDs_col , servers_col)},{get_field_value(sheet, machine, subnet_IDs_test_col , servers_col)},{get_field_value(sheet, machine, securitygroup_IDs_test_col , servers_col)},{get_field_value(sheet, machine, iamRole_col , servers_col)},{get_field_value(sheet, machine, tenancy_col , servers_col)},{format_tags(sheet, machine, first_tag_col, last_tag_col, servers_col)}\n')
+        #file.write(f'{get_field_value(sheet, machine, wave_id_col, servers_col)},{get_field_value(sheet, machine, app_col, servers_col)},{get_field_value(sheet, machine, cloudendure_projectname_col, servers_col)},{get_field_value(sheet, machine, aws_accountid_col, servers_col)},{machine},{get_field_value(sheet, machine, server_os_col, servers_col)},{get_field_value(sheet, machine, server_os_version_col, servers_col)},{get_field_value(sheet, machine, server_fqdn_col, servers_col)},{get_field_value(sheet, machine, server_tier_col, servers_col)},{get_field_value(sheet, machine, server_environment_col, servers_col)},{get_field_value(sheet, machine,subnet_IDs_test_col , servers_col)},{get_field_value(sheet, machine, privateIPs_col , servers_col)},{get_field_value(sheet, machine, securitygroup_IDs_col , servers_col)},{get_field_value(sheet, machine, subnet_IDs_test_col , servers_col)},{get_field_value(sheet, machine, securitygroup_IDs_test_col , servers_col)},{get_field_value(sheet, machine, iamRole_col , servers_col)},{get_field_value(sheet, machine, instanceType_col , servers_col)},{get_field_value(sheet, machine, tenancy_col , servers_col)},{format_tags(sheet, machine, first_tag_col, last_tag_col, servers_col)}\n')
         file.write(f'{get_field_value(sheet, machine, wave_id_col, servers_col)},{get_field_value(sheet, machine, app_col, servers_col)},{get_field_value(sheet, machine, cloudendure_projectname_col, servers_col)},{get_field_value(sheet, machine, aws_accountid_col, servers_col)},{machine},{get_field_value(sheet, machine, server_os_col, servers_col)},{get_field_value(sheet, machine, server_os_version_col, servers_col)},{get_field_value(sheet, machine, server_fqdn_col, servers_col)},{get_field_value(sheet, machine, server_tier_col, servers_col)},{get_field_value(sheet, machine, server_environment_col, servers_col)},{get_field_value(sheet, machine,subnet_IDs_test_col , servers_col)},{get_field_value(sheet, machine, privateIPs_col , servers_col)},{get_field_value(sheet, machine, securitygroup_IDs_col , servers_col)},{get_field_value(sheet, machine, subnet_IDs_test_col , servers_col)},{get_field_value(sheet, machine, securitygroup_IDs_test_col , servers_col)},{get_field_value(sheet, machine, iamRole_col , servers_col)},{get_field_value(sheet, machine, instanceType_col , servers_col)},{get_field_value(sheet, machine, tenancy_col , servers_col)}\n')
+
+#6.2
+# def create_csv(machines, sheet, app_col, servers_col, first_tag_col, last_tag_col, row_with_field_names):
+def create_MigrationFactory_tag_CSV(argswave, excel_servers, sheet, servers_col, first_tag_col, last_tag_col, row_with_field_names):
+
+    export_csv = "MigrationFactoryTAG_" + argswave + ".csv"
+    file = open(export_csv, 'w+')
+    # first row
+    file.write('Name,')
+    for tag_num in range(first_tag_col, last_tag_col+1):
+        # remove .0 from the end of string
+        check_string = (sheet.cell_value(row_with_field_names, tag_num))
+        file.write(f'{check_string}')
+        if tag_num < last_tag_col:
+            file.write(",")
+    file.write(f'\n')
+    line_count = 0
+    # print(machines)
+    for machine in excel_servers:
+        file.write(f'{machine},{format_tags(sheet, machine, first_tag_col, last_tag_col, servers_col)}\n')
 
 #6.5
 def get_field_value(sheet, machine, field_col, server_col):
@@ -114,18 +138,21 @@ def format_tags(sheet, machine, first_tag_col, last_tag_col, servers_col):
             # print("col_machine: " + str(col_machine))
             break
         
-    string_tag = "["
+    string_tag = ""
     # add key value to string_tag
     for tag_num in range(first_tag_col, last_tag_col+1):
-        string_tag += "{'key':'"
-        string_tag += str(sheet.cell_value(1, tag_num))
-        string_tag += "','value':'"
-        string_tag += str(sheet.cell_value(row_machine, tag_num))
-        string_tag += "'}"
+        # remove .0 from the end of string
+        check_string = (sheet.cell_value(row_machine, tag_num))
+        if type(check_string) == float:
+            # print ('I am float')
+            value = str(int(check_string))
+        else:
+            value = str(check_string)
+
+        string_tag += value
+
         if tag_num < last_tag_col:
             string_tag += ","
-
-    string_tag += "]"
 
     return string_tag 
 #### excelToCE end ####
@@ -206,9 +233,17 @@ def main(args):
 	#5
 	# machines = compare_arrays_of_machine_names(csv_machines, excel_servers)
 	#6
-	create_csv(args.wave, excel_servers, sheet, wave_id_col ,tenancy_col, instanceType_col, iamRole_col, securitygroup_IDs_test_col, subnet_IDs_test_col, securitygroup_IDs_col, privateIPs_col, subnet_IDs_col, server_environment_col, server_tier_col, app_col, cloudendure_projectname_col, aws_accountid_col, servers_col, server_os_col, server_os_version_col, server_fqdn_col, first_tag_col, last_tag_col, row_with_field_names)
+	create_MigrationFactory_form_CSV(args.wave, excel_servers, sheet, wave_id_col ,tenancy_col, instanceType_col, iamRole_col, securitygroup_IDs_test_col, subnet_IDs_test_col, securitygroup_IDs_col, privateIPs_col, subnet_IDs_col, server_environment_col, server_tier_col, app_col, cloudendure_projectname_col, aws_accountid_col, servers_col, server_os_col, server_os_version_col, server_fqdn_col, first_tag_col, last_tag_col, row_with_field_names)
+	create_MigrationFactory_tag_CSV(args.wave, excel_servers, sheet, servers_col, first_tag_col, last_tag_col, row_with_field_names)
+	goforintakeform = input("update Bluprint? (Y/N) ->")
+	if goforintakeform == "Y" or goforintakeform == "y":
+		intakeform.main("MigrationFactoryForm_" + args.wave + ".csv")
+	gofortag = input("update TAGs? (Y/N) ->")
+	if gofortag == "Y" or gofortag == "y":
+		importtags.main("MigrationFactoryTAG_" + args.wave + ".csv")
 
 ###### excelToCE end ########
+
 
 if __name__ == '__main__':
 
@@ -221,3 +256,5 @@ if __name__ == '__main__':
 	# ###### excelToCE end ########
 	parser.add_argument('-o', '--outputfile', required=False, help='Output CSV file for backup before change')
 	main(args = parser.parse_args())
+
+
