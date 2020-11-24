@@ -111,7 +111,7 @@ def uploading_data(data, token):
                 match = True
         if (match == False):
             wave_ids.append(wave_id)
-    if len(wave_ids) is not 0:
+    if len(wave_ids) != 0:
         print("New Waves: ")
         print("")
         for wave in wave_ids:
@@ -156,7 +156,7 @@ def uploading_data(data, token):
                     sys.exit(4)
         if (match == False):
             app_list.append(app_csv)
-    if len(app_list) is not 0:
+    if len(app_list) != 0:
         print("New Apps: ")
         print("")
         for app in app_list:
@@ -201,7 +201,7 @@ def uploading_data(data, token):
         server_item['instanceType'] = row['instanceType'].strip()
         server_item['tenancy'] = row['tenancy'].strip()
         server_list.append(server_item)
-    if len(server_list) is not 0:
+    if len(server_list) != 0:
         print("New Servers: ")
         print("")
         for server in server_list:
